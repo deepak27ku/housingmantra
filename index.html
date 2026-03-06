@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Housing Mantra | Premium Properties</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-navy: #1A2238; 
+            --accent-gold: #D4AF37;  
+            --price-green: #27AE60;  
+            --white: #ffffff;
+            --bg-light: #F8F9FA;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+        body { background-color: var(--bg-light); color: var(--primary-navy); }
+
+        /* --- Navigation --- */
+        nav {
+            background: var(--primary-navy);
+            padding: 12px 5%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 2px solid var(--accent-gold);
+        }
+
+        .logo {
+            font-size: 16px; /* Smaller Logo */
+            font-weight: 700;
+            color: var(--accent-gold);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 15px;
+            overflow-x: auto;
+            scrollbar-width: none;
+            padding: 5px 0;
+        }
+
+        .nav-links::-webkit-scrollbar { display: none; }
+
+        .nav-links a {
+            text-decoration: none;
+            color: #E8D082;
+            font-size: 10px;
+            text-transform: uppercase;
+            font-weight: 600;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 85px;
+            transition: 0.3s;
+        }
+
+        .nav-links i {
+            font-size: 18px;
+            margin-bottom: 3px;
+            color: var(--accent-gold);
+        }
+
+        /* --- Hero Section --- */
+        .hero {
+            height: 50vh;
+            background: linear-gradient(rgba(26, 34, 56, 0.6), rgba(26, 34, 56, 0.6)), 
+                        url('https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=1200&q=80');
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .search-bar {
+            background: var(--white);
+            padding: 5px;
+            border-radius: 50px;
+            display: flex;
+            width: 100%;
+            max-width: 600px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .search-bar input {
+            flex: 1;
+            border: none;
+            padding: 12px 20px;
+            outline: none;
+            font-size: 14px;
+            border-radius: 50px;
+        }
+
+        .search-bar button {
+            background: var(--accent-gold);
+            color: var(--primary-navy);
+            border: none;
+            padding: 10px 25px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: 700;
+        }
+
+        /* --- Property Cards --- */
+        .container { padding: 50px 5%; max-width: 1200px; margin: auto; }
+        .property-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 25px;
+        }
+
+        .card {
+            background: var(--white);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            transition: 0.3s;
+            border: 1px solid #eee;
+        }
+
+        .card:hover { transform: translateY(-5px); border-color: var(--accent-gold); }
+
+        .card-img {
+            height: 200px;
+            background-size: cover;
+            background-position: center;
+            position: relative;
+        }
+
+        .status-tag {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: var(--primary-navy);
+            color: var(--accent-gold);
+            padding: 4px 10px;
+            font-size: 10px;
+            font-weight: 700;
+            border-radius: 4px;
+        }
+
+        .card-body { padding: 20px; }
+
+        /* Row 1: Property Name */
+        .prop-name { font-size: 17px; font-weight: 600; color: var(--primary-navy); margin-bottom: 4px; }
+
+        /* Row 2: Developer */
+        .dev-name { color: var(--accent-gold); font-size: 12px; font-weight: 700; text-transform: uppercase; margin-bottom: 8px; display: block; }
+
+        /* Row 3: Price */
+        .price-range { color: var(--price-green); font-size: 19px; font-weight: 700; margin-bottom: 8px; display: block; }
+
+        /* Row 4: Details & Status */
+        .avail-info { font-size: 13px; color: #666; margin-bottom: 18px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #f0f0f0; padding-top: 10px; }
+        .status-text { font-weight: 600; color: var(--primary-navy); font-size: 12px; }
+
+        /* Row 5: Buttons */
+        .card-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        
+        .btn {
+            padding: 10px;
+            text-align: center;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 600;
+            border-radius: 6px;
+            transition: 0.3s;
+        }
+
+        .btn-view { border: 1.5px solid var(--primary-navy); color: var(--primary-navy); }
+        .btn-view:hover { background: var(--primary-navy); color: var(--white); }
+
+        .btn-contact { background: var(--accent-gold); color: var(--primary-navy); border: 1.5px solid var(--accent-gold); }
+        .btn-contact:hover { background: #b8962d; border-color: #b8962d; }
+
+        /* Responsiveness */
+        @media (max-width: 768px) {
+            .nav-links a { min-width: 80px; }
+            .hero { height: 40vh; }
+            .property-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <a href="#" class="logo">Housing Mantra</a>
+        <div class="nav-links">
+            <a href="#"><i class="fa-solid fa-house"></i>Home</a>
+            <a href="userlogin.html"><i class="fa-solid fa-plus-square"></i>Post Property</a>
+            <a href="#"><i class="fa-solid fa-star"></i>New Launches</a>
+            <a href="#"><i class="fa-solid fa-building"></i>About Us</a>
+            <a href="#"><i class="fa-solid fa-phone"></i>Contact Us</a>
+            <a href="#"><i class="fa-solid fa-user"></i>User Login</a>
+            <a href="#"><i class="fa-solid fa-user-shield"></i>Admin</a>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="search-bar">
+            <input type="text" placeholder="Search by locality or project name...">
+            <button>SEARCH</button>
+        </div>
+    </section>
+
+    <div class="container">
+        <div class="property-grid">
+            
+            <div class="card">
+                <div class="card-img" style="background-image: url('https://images.unsplash.com/photo-1582407947304-fd86f028f716?auto=format&fit=crop&w=500&q=80');">
+                    <span class="status-tag">UNDER CONSTRUCTION</span>
+                </div>
+                <div class="card-body">
+                    <div class="prop-name">1BHK, 2BHK in Kharadi, Pune</div>
+                    <span class="dev-name">Prism City</span>
+                    <span class="price-range">₹ 60Lac - 1.5Cr</span>
+                    <div class="avail-info">
+                        <span><i class="fa-solid fa-bed"></i> 1BHK, 2BHK</span>
+                        <span class="status-text">Status: Under Construction</span>
+                    </div>
+                    <div class="card-btns">
+                        <a href="#" class="btn btn-view">View Details</a>
+                        <a href="#" class="btn btn-contact">Contact Us</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-img" style="background-image: url('https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=500&q=80');">
+                    <span class="status-tag">READY</span>
+                </div>
+                <div class="card-body">
+                    <div class="prop-name">2BHK, 3BHK in Baner, Pune</div>
+                    <span class="dev-name">Empire Estate</span>
+                    <span class="price-range">₹ 85Lac - 2.1Cr</span>
+                    <div class="avail-info">
+                        <span><i class="fa-solid fa-bed"></i> 2BHK, 3BHK</span>
+                        <span class="status-text">Status: Ready</span>
+                    </div>
+                    <div class="card-btns">
+                        <a href="#" class="btn btn-view">View Details</a>
+                        <a href="#" class="btn btn-contact">Contact Us</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-img" style="background-image: url('https://images.unsplash.com/photo-1512918766674-ed62b9062a35?auto=format&fit=crop&w=500&q=80');">
+                    <span class="status-tag">UNDER CONSTRUCTION</span>
+                </div>
+                <div class="card-body">
+                    <div class="prop-name">Studio & 1BHK in Hinjewadi</div>
+                    <span class="dev-name">VTP Realty</span>
+                    <span class="price-range">₹ 35Lac - 75Lac</span>
+                    <div class="avail-info">
+                        <span><i class="fa-solid fa-bed"></i> Studio, 1BHK</span>
+                        <span class="status-text">Status: Under Construction</span>
+                    </div>
+                    <div class="card-btns">
+                        <a href="#" class="btn btn-view">View Details</a>
+                        <a href="#" class="btn btn-contact">Contact Us</a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</body>
+</html>
