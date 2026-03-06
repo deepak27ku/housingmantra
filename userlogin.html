@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HousingMantra | Premium Portal</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root { --gold: #b8860b; --dark: #121212; --glass: rgba(255, 255, 255, 0.98); --error: #ff4d4d; --success: #2ecc71; --border: #e0e0e0; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; min-height: 100vh; background: url('https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1920&q=80') no-repeat center center fixed; background-size: cover; }
+        .hidden { display: none !important; }
+
+        /* LOADING SPINNER */
+        #spinner-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); z-index: 20000; display: none; align-items: center; justify-content: center; flex-direction: column; }
+        .loader { width: 50px; height: 50px; border: 5px solid #f3f3f3; border-top: 5px solid var(--gold); border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .brand-header { width: 100%; text-align: center; padding: 25px 0; background: linear-gradient(rgba(0,0,0,0.8), transparent); }
+        .brand-header h1 { color: var(--gold); margin: 0; font-size: 2rem; letter-spacing: 4px; font-weight: 800; }
+
+        #auth-section { display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .login-card { background: var(--glass); padding: 30px; border-radius: 16px; width: 100%; max-width: 500px; box-shadow: 0 15px 35px rgba(0,0,0,0.5); text-align: center; border-top: 5px solid var(--gold); }
+        .container { max-width: 850px; margin: 0 auto 50px; padding: 25px; background: white; border-radius: 15px; box-shadow: 0 10px 40px rgba(0,0,0,0.3); width: 90%; }
+
+        /* INPUTS & VALIDATION */
+        .field-group { text-align: left; margin-top: 12px; }
+        label { font-size: 0.75rem; font-weight: 700; color: #555; text-transform: uppercase; }
+        .input-wrap { position: relative; display: flex; align-items: center; margin-top: 5px; }
+        input, textarea { width: 100%; padding: 12px 40px 12px 12px; border: 2px solid var(--border); border-radius: 8px; box-sizing: border-box; background: #f8f8f8; font-size: 14px; transition: 0.3s; }
+        textarea { resize: none; height: 70px; font-family: inherit; }
+        
+        .valid-input { border-color: var(--success) !important; background-color: #f0fff4 !important; }
+        .invalid-input { border-color: var(--error) !important; background-color: #fff5f5 !important; }
+        
+        input[readonly], textarea[readonly] { cursor: default; opacity: 0.8; background: #f8f8f8 !important; border-color: var(--border) !important; }
+        .edit-icon { position: absolute; right: 12px; cursor: pointer; color: var(--gold); font-size: 1rem; }
+
+        /* ALERT */
+        #central-alert { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10001; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 0 100px rgba(0,0,0,0.5); border-left: 10px solid var(--gold); min-width: 300px; text-align: center; display: none; }
+        #central-alert button { margin-top: 15px; padding: 10px 25px; background: var(--dark); color: white; border: none; border-radius: 5px; cursor: pointer; }
+
+        .nav-btn { padding: 12px 20px; border-radius: 8px; border: 1px solid #ddd; background: white; cursor: pointer; font-size: 0.85rem; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .logout-btn { background: var(--dark) !important; color: white !important; border: none; }
+        .progress-bg { background: #eee; height: 8px; border-radius: 10px; overflow: hidden; margin-top: 5px; }
+        .progress-fill { background: var(--success); height: 100%; width: 0%; transition: 1s ease-in-out; }
+        .link-text { color: var(--gold); cursor: pointer; font-weight: bold; text-decoration: none; font-size: 0.8rem; }
+        /* PROFILE PICTURE */
+        .avatar-wrap { position: relative; display: inline-block; margin-bottom: 15px; }
+        .avatar-img { width: 110px; height: 110px; border-radius: 50%; object-fit: cover; border: 4px solid var(--gold); box-shadow: 0 4px 18px rgba(0,0,0,0.18); background: #eee; display: block; }
+        .avatar-edit-btn { position: absolute; bottom: 4px; right: 4px; background: var(--gold); border: none; border-radius: 50%; width: 30px; height: 30px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: white; font-size: 0.75rem; box-shadow: 0 2px 6px rgba(0,0,0,0.25); transition: background 0.2s; }
+        .avatar-edit-btn:hover { background: #9a6f00; }
+        #avatar-file-input { display: none; }
+
+        /* HOME INFO CARD */
+        .home-info-card { background: #fafafa; border: 1px solid #efefef; border-radius: 12px; padding: 20px 22px; margin-top: 18px; text-align: left; }
+        .home-info-card .info-row { display: flex; align-items: flex-start; gap: 12px; padding: 9px 0; border-bottom: 1px solid #f0f0f0; font-size: 0.88rem; color: #444; }
+        .home-info-card .info-row:last-child { border-bottom: none; }
+        .home-info-card .info-row i { color: var(--gold); width: 18px; margin-top: 1px; flex-shrink: 0; }
+        .home-info-card .info-label { font-weight: 700; color: #888; font-size: 0.72rem; text-transform: uppercase; min-width: 80px; }
+        .home-info-card .info-val { color: #222; word-break: break-word; }
+        .upload-progress { display: none; height: 4px; border-radius: 4px; background: #eee; margin-top: 8px; overflow: hidden; }
+        .upload-progress-bar { height: 100%; background: var(--gold); width: 0%; transition: width 0.3s; }
+
+        /* HORIZONTAL SCROLL FOR NAV */
+        .nav-scroll {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            overflow-x: auto;
+            white-space: nowrap;
+            padding-bottom: 5px;
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .nav-scroll::-webkit-scrollbar { display: none; }
+        .nav-scroll .nav-btn { flex: 0 0 auto; }
+
+        /* POST PROPERTY BUTTON HIGHLIGHT */
+        #btn-post-property {
+            background: var(--gold) !important;
+            color: white !important;
+            border: none !important;
+            box-shadow: 0 2px 10px rgba(184,134,11,0.4);
+            transition: transform 0.15s, box-shadow 0.15s;
+        }
+        #btn-post-property:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(184,134,11,0.5);
+        }
+    </style>
+</head>
+<body>
+    <div id="spinner-overlay"><div class="loader"></div><p>Processing...</p></div>
+
+    <div class="brand-header"><h1>HOUSINGMANTRA</h1></div>
+    
+    <div id="central-alert">
+        <h4 id="alert-title">System Message</h4>
+        <p id="alert-msg"></p>
+        <button onclick="closeAlert()">OK</button>
+    </div>
+
+    <div id="auth-section">
+        <div class="login-card">
+            <div id="login-view">
+                <h3>Sign In</h3>
+                <input type="email" id="l-email" placeholder="Email Address">
+                <div class="input-wrap" style="margin-top:10px;">
+                    <input type="password" id="l-pass" placeholder="Password">
+                    <i class="fa-solid fa-eye edit-icon" onclick="togglePass('l-pass', this)" style="color:#aaa"></i>
+                </div>
+                <div style="text-align: right; margin-top: 10px;">
+                    <span class="link-text" onclick="forgotPassword()">Forgot Password?</span>
+                </div>
+                <button class="nav-btn logout-btn" id="btn-login" style="width:100%; margin-top:20px; padding:15px;">LOGIN</button>
+                <p style="font-size:0.8rem; margin-top:15px;">New? <b onclick="showView('signup')" class="link-text">Register Now</b></p>
+                
+                <div id="social-block">
+                    <div style="margin:20px 0; color:#888; font-size: 0.7rem;">OR</div>
+                    <button id="btn-google" style="width:100%; padding:12px; border:1px solid #ddd; background:white; border-radius:8px; display:flex; align-items:center; justify-content:center; gap:10px; cursor:pointer; font-weight:bold;">
+                        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18"> Continue with Google
+                    </button>
+                </div>
+            </div>
+
+            <div id="signup-view" class="hidden">
+                <h3>Identity Registration</h3>
+                <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:8px;">
+                    <input type="text" id="r-fn" placeholder="First*">
+                    <input type="text" id="r-mn" placeholder="Middle">
+                    <input type="text" id="r-ln" placeholder="Last*">
+                </div>
+                <input type="tel" id="r-ph" placeholder="10-Digit Mobile*" maxlength="10" style="margin-top:10px;">
+                <textarea id="r-adr" placeholder="Full Residential Address*" style="margin-top:10px;"></textarea>
+                <input type="email" id="r-em" placeholder="Email Address*" style="margin-top:10px;">
+                <div class="input-wrap" style="margin-top:10px;">
+                    <input type="password" id="r-pw" placeholder="Create Password*">
+                    <i class="fa-solid fa-eye edit-icon" onclick="togglePass('r-pw', this)" style="color:#aaa"></i>
+                </div>
+                <div class="input-wrap" style="margin-top:10px;">
+                    <input type="password" id="r-cp" placeholder="Confirm Password*">
+                    <i class="fa-solid fa-eye edit-icon" onclick="togglePass('r-cp', this)" style="color:#aaa"></i>
+                </div>
+                <button class="nav-btn logout-btn" id="btn-do-signup" style="width:100%; margin-top:20px; padding:15px;">SIGN UP</button>
+                <p onclick="showView('login')" class="link-text" style="margin-top:15px; display: block;">Back to Login</p>
+            </div>
+
+            <div id="verify-view" class="hidden">
+                <i class="fa-solid fa-envelope-circle-check" style="font-size: 3rem; color: var(--gold);"></i>
+                <h3>Verify Your Email</h3>
+                <p style="font-size: 0.9rem; color: #555;">Check your inbox. Verify to activate account.</p>
+                <button onclick="resendEmail()" class="nav-btn" style="width:100%; margin-top:15px; border-color: var(--gold); color: var(--gold);">RESEND LINK</button>
+                <button onclick="showView('login')" class="nav-btn logout-btn" style="width:100%; margin-top:10px;">BACK TO LOGIN</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="main-dashboard" class="container hidden">
+        <div class="nav-scroll">
+            <button class="nav-btn" onclick="toggleSec('welcome-sec')"><i class="fa-solid fa-house"></i> Home</button>
+            <button class="nav-btn" onclick="toggleSec('profile-sec')"><i class="fa-solid fa-user"></i> Profile</button>
+            <button class="nav-btn" onclick="flashAlert('Coming Soon')"><i class="fa-solid fa-list"></i> My Listings</button>
+            <button class="nav-btn" onclick="flashAlert('Coming Soon')"><i class="fa-solid fa-heart"></i> Favorites</button>
+            <!-- POST PROPERTY BUTTON: navigates to post-property.html -->
+            <button class="nav-btn" id="btn-post-property"><i class="fa-solid fa-plus-circle"></i> Post Property</button>
+            <button id="btn-logout" class="nav-btn logout-btn" style="margin-left: auto;"><i class="fa-solid fa-power-off"></i> Logout</button>
+        </div>
+
+        <div id="welcome-sec">
+            <div style="text-align:center; margin-bottom:10px;">
+                <div class="avatar-wrap">
+                    <img id="home-avatar" class="avatar-img" src="https://ui-avatars.com/api/?name=U&background=b8860b&color=fff&size=110" alt="Profile">
+                </div>
+                <h2 id="u-display-name" style="margin:6px 0 2px;">...</h2>
+                <p id="u-display-id" style="color:var(--gold); font-weight:800; font-size: 1.1rem; margin:0;"></p>
+            </div>
+            <div style="margin: 14px 0 4px;">
+                <label>Profile Completeness: <span id="progress-text">0%</span></label>
+                <div class="progress-bg"><div id="progress-fill" class="progress-fill"></div></div>
+            </div>
+            <div class="home-info-card">
+                <div class="info-row"><i class="fa-solid fa-envelope"></i><span class="info-label">Email</span><span class="info-val" id="home-email">—</span></div>
+                <div class="info-row"><i class="fa-solid fa-phone"></i><span class="info-label">Phone</span><span class="info-val" id="home-phone">—</span></div>
+                <div class="info-row"><i class="fa-solid fa-location-dot"></i><span class="info-label">Address</span><span class="info-val" id="home-address">—</span></div>
+                <div class="info-row"><i class="fa-solid fa-calendar-check"></i><span class="info-label">Joined</span><span class="info-val" id="home-joined">—</span></div>
+            </div>
+
+            <!-- Quick-action Post Property card -->
+            <div style="margin-top:20px; padding:18px; background:linear-gradient(135deg,#fffdf5,#fff8e1); border:1.5px solid var(--gold); border-radius:12px; display:flex; align-items:center; justify-content:space-between; gap:15px; flex-wrap:wrap;">
+                <div>
+                    <p style="margin:0;font-weight:700;color:#333;">Ready to list your property?</p>
+                    <p style="margin:4px 0 0;font-size:0.82rem;color:#888;">Post your project, flat or commercial space in minutes.</p>
+                </div>
+                <button onclick="goToPostProperty()" style="background:var(--gold);color:white;border:none;border-radius:8px;padding:12px 22px;font-weight:bold;cursor:pointer;white-space:nowrap;">
+                    <i class="fa-solid fa-plus-circle"></i> Post Property
+                </button>
+            </div>
+        </div>
+
+        <div id="profile-sec" class="hidden">
+            <h3>Account Settings</h3>
+            <div style="text-align:center; margin-bottom:18px;">
+                <div class="avatar-wrap" style="margin-bottom:6px;">
+                    <img id="profile-avatar" class="avatar-img" src="https://ui-avatars.com/api/?name=U&background=b8860b&color=fff&size=110" alt="Profile Photo">
+                    <button class="avatar-edit-btn" onclick="document.getElementById('avatar-file-input').click()" title="Change Photo"><i class="fa-solid fa-camera"></i></button>
+                </div>
+                <input type="file" id="avatar-file-input" accept="image/*">
+                <div class="upload-progress" id="upload-progress"><div class="upload-progress-bar" id="upload-progress-bar"></div></div>
+                <p style="font-size:0.72rem; color:#aaa; margin:4px 0 0;">JPG, PNG or WEBP · Max 2 MB</p>
+            </div>
+            <div class="field-group"><label>Email (System Managed)</label><div class="input-wrap"><input type="text" id="u-em" readonly style="opacity:0.7;"></div></div>
+            <div class="field-group"><label>First Name*</label><div class="input-wrap"><input type="text" id="u-fn" readonly><i class="fa-solid fa-pencil edit-icon" onclick="unlock('u-fn')"></i></div></div>
+            <div class="field-group"><label>Middle Name</label><div class="input-wrap"><input type="text" id="u-mn" readonly><i class="fa-solid fa-pencil edit-icon" onclick="unlock('u-mn')"></i></div></div>
+            <div class="field-group"><label>Last Name*</label><div class="input-wrap"><input type="text" id="u-ln" readonly><i class="fa-solid fa-pencil edit-icon" onclick="unlock('u-ln')"></i></div></div>
+            <div class="field-group"><label>Phone*</label><div class="input-wrap"><input type="tel" id="u-ph" readonly maxlength="10"><i class="fa-solid fa-pencil edit-icon" onclick="unlock('u-ph')"></i></div></div>
+            <div class="field-group"><label>Address*</label><div class="input-wrap"><textarea id="u-adr" readonly></textarea><i class="fa-solid fa-pencil edit-icon" onclick="unlock('u-adr')"></i></div></div>
+
+            <div id="edit-controls" style="display:none; gap:10px; margin-top:20px;">
+                <button id="btn-save-profile" style="flex:2; padding:15px; background:var(--success); color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">SAVE CHANGES</button>
+                <button onclick="cancelEdit()" style="flex:1; padding:15px; background:#ddd; border:none; border-radius:8px; cursor:pointer;">CANCEL</button>
+            </div>
+            
+            <hr style="margin:25px 0; border:0; border-top:1px solid #eee;">
+            <button id="btn-reset-pw" class="nav-btn" style="width:100%; border-color:var(--error); color:var(--error);"><i class="fa-solid fa-key"></i> RESET PASSWORD VIA EMAIL</button>
+        </div>
+    </div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getStorage, ref as storageRef, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+    import { getFirestore, doc, setDoc, getDoc, onSnapshot, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendEmailVerification, sendPasswordResetEmail, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+    // --- FIREBASE CONFIG ---
+    const firebaseConfig = {
+        apiKey: "AIzaSyCCSBAf8hgB7AMbFjnDZMu-79nohueEJF8",
+        authDomain: "housingmantra02.firebaseapp.com",
+        projectId: "housingmantra02",
+        storageBucket: "housingmantra02.firebasestorage.app",
+        messagingSenderId: "638993739848",
+        appId: "1:638993739848:web:2d96ef675c9b1428dee87d"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+    const provider = new GoogleAuthProvider();
+    const storage = getStorage(app);
+
+    // --- UI HELPERS ---
+    const flashAlert = (msg) => { document.getElementById('alert-msg').innerText = msg; document.getElementById('central-alert').style.display = 'block'; }
+    window.flashAlert = flashAlert;
+    window.closeAlert = () => document.getElementById('central-alert').style.display = 'none';
+    const setLoader = (show) => document.getElementById('spinner-overlay').style.display = show ? 'flex' : 'none';
+
+    // --- NAVIGATION TO POST PROPERTY ---
+    // Guard: only allow if user is logged in
+    window.goToPostProperty = () => {
+        if (auth.currentUser) {
+            window.location.href = 'post-property.html';
+        } else {
+            flashAlert("Please log in to post a property.");
+        }
+    };
+
+    // --- VALIDATION LOGIC ---
+    const rules = {
+        name: (v) => /^[A-Za-z]{3,}$/.test(v.trim()),
+        phone: (v) => /^[0-9]{10}$/.test(v.trim()),
+        any: (v) => v.trim().length > 0
+    };
+
+    const getValidationError = (data) => {
+        if(!rules.name(data.firstName)) return "First Name must be at least 3 letters.";
+        if(!rules.name(data.lastName)) return "Last Name must be at least 3 letters.";
+        if(!rules.phone(data.phone)) return "Phone must be exactly 10 digits.";
+        if(!rules.any(data.address)) return "Address field cannot be empty.";
+        return null;
+    };
+
+    const applyLiveStyle = (el, isValid) => {
+        if(el.id.includes('mn') && el.value.trim() === "") { el.classList.remove('valid-input', 'invalid-input'); return; }
+        el.classList.toggle('valid-input', isValid);
+        el.classList.toggle('invalid-input', !isValid);
+    };
+
+    ['r-ph', 'u-ph'].forEach(id => {
+        document.getElementById(id).addEventListener('input', (e) => {
+            e.target.value = e.target.value.replace(/\D/g, ''); 
+            applyLiveStyle(e.target, rules.phone(e.target.value));
+        });
+    });
+
+    ['r-fn','r-ln','u-fn','u-ln'].forEach(id => {
+        document.getElementById(id).addEventListener('input', (e) => applyLiveStyle(e.target, rules.name(e.target.value)));
+    });
+    ['r-adr','u-adr'].forEach(id => {
+        document.getElementById(id).addEventListener('input', (e) => applyLiveStyle(e.target, rules.any(e.target.value)));
+    });
+    document.getElementById('r-mn').addEventListener('input', (e) => applyLiveStyle(e.target, true));
+    document.getElementById('u-mn').addEventListener('input', (e) => applyLiveStyle(e.target, true));
+
+    // --- AUTH STATE ---
+    let unsubscribeSnapshot = null;
+    const clearDashboard = () => {
+        if (unsubscribeSnapshot) { unsubscribeSnapshot(); unsubscribeSnapshot = null; }
+    };
+
+    let isResendingVerification = false;
+
+    onAuthStateChanged(auth, user => {
+        if (isResendingVerification) return;
+        if (user && user.emailVerified) {
+            document.getElementById('auth-section').classList.add('hidden');
+            document.getElementById('main-dashboard').classList.remove('hidden');
+            toggleSec('welcome-sec');
+            fetchAndPopulate(user);
+        } else {
+            clearDashboard();
+            document.getElementById('auth-section').classList.remove('hidden');
+            document.getElementById('main-dashboard').classList.add('hidden');
+        }
+    });
+
+    async function fetchAndPopulate(user) {
+        setLoader(true);
+        if (unsubscribeSnapshot) { unsubscribeSnapshot(); }
+
+        const resolveAvatar = (firestoreUrl, googleUrl, name) => {
+            if (firestoreUrl) return firestoreUrl;
+            if (googleUrl) return googleUrl;
+            const initials = encodeURIComponent(name || 'U');
+            return `https://ui-avatars.com/api/?name=${initials}&background=b8860b&color=fff&size=110`;
+        };
+
+        const googlePhotoURL = user.photoURL || null;
+
+        unsubscribeSnapshot = onSnapshot(doc(db, "users", user.uid), (snap) => {
+            if(snap.exists()){
+                const d = snap.data();
+                const fullName = [d.firstName, d.middleName, d.lastName].filter(Boolean).join(' ');
+
+                document.getElementById('u-display-id').innerText = `HM-${user.uid.substring(0,6).toUpperCase()}`;
+                document.getElementById('u-display-name').innerText = `Welcome, ${d.firstName}`;
+                document.getElementById('u-em').value = d.email || "";
+                document.getElementById('u-fn').value = d.firstName || "";
+                document.getElementById('u-mn').value = d.middleName || "";
+                document.getElementById('u-ln').value = d.lastName || "";
+                document.getElementById('u-ph').value = d.phone || "";
+                document.getElementById('u-adr').value = d.address || "";
+
+                document.getElementById('home-email').innerText = d.email || '—';
+                document.getElementById('home-phone').innerText = d.phone || '—';
+                document.getElementById('home-address').innerText = d.address || '—';
+                if (d.joinedAt && d.joinedAt.toDate) {
+                    document.getElementById('home-joined').innerText = d.joinedAt.toDate().toLocaleDateString('en-IN', { day:'numeric', month:'long', year:'numeric' });
+                } else {
+                    document.getElementById('home-joined').innerText = '—';
+                }
+
+                const avatarUrl = resolveAvatar(d.photoURL, googlePhotoURL, fullName);
+                document.getElementById('home-avatar').src = avatarUrl;
+                document.getElementById('profile-avatar').src = avatarUrl;
+
+                const mandValues = [d.firstName, d.lastName, d.phone, d.address];
+                const filled = mandValues.filter(v => v && v.toString().trim().length > 0).length;
+                const p = (filled / 4) * 100;
+                document.getElementById('progress-fill').style.width = p + '%';
+                document.getElementById('progress-text').innerText = Math.round(p) + '%';
+            }
+            setLoader(false);
+        }, () => { setLoader(false); });
+    }
+
+    // ── PROFILE PICTURE UPLOAD ──
+    document.getElementById('avatar-file-input').addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        if (file.size > 2 * 1024 * 1024) return flashAlert("Image must be under 2 MB.");
+        if (!auth.currentUser) return;
+
+        const progressWrap = document.getElementById('upload-progress');
+        const progressBar = document.getElementById('upload-progress-bar');
+        progressWrap.style.display = 'block';
+        progressBar.style.width = '0%';
+        setLoader(true);
+
+        try {
+            const fileRef = storageRef(storage, `profile_pictures/${auth.currentUser.uid}`);
+            const uploadTask = uploadBytesResumable(fileRef, file);
+
+            uploadTask.on('state_changed',
+                (snapshot) => {
+                    const pct = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
+                    progressBar.style.width = pct + '%';
+                },
+                (err) => { flashAlert("Upload failed: " + err.message); setLoader(false); progressWrap.style.display = 'none'; },
+                async () => {
+                    const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+                    await updateDoc(doc(db, "users", auth.currentUser.uid), { photoURL: downloadURL });
+                    progressWrap.style.display = 'none';
+                    setLoader(false);
+                    flashAlert("Profile picture updated!");
+                    e.target.value = '';
+                }
+            );
+        } catch(err) {
+            flashAlert("Upload error: " + err.message);
+            setLoader(false);
+            progressWrap.style.display = 'none';
+        }
+    });
+
+    // --- FORGOT PASSWORD ---
+    window.forgotPassword = async () => {
+        const email = document.getElementById('l-email').value;
+        if(!email) return flashAlert("Please enter your email address first.");
+        setLoader(true);
+        try {
+            await sendPasswordResetEmail(auth, email);
+            flashAlert("Password reset link sent to " + email);
+        } catch (e) { flashAlert("Error: " + e.message); }
+        setLoader(false);
+    }
+
+    // --- SAVE PROFILE ---
+    document.getElementById('btn-save-profile').onclick = async () => {
+        const u = { 
+            firstName: document.getElementById('u-fn').value.trim(), 
+            middleName: document.getElementById('u-mn').value.trim(), 
+            lastName: document.getElementById('u-ln').value.trim(), 
+            phone: document.getElementById('u-ph').value.trim(), 
+            address: document.getElementById('u-adr').value.trim() 
+        };
+        const err = getValidationError(u);
+        if(err) return flashAlert(err);
+        setLoader(true);
+        try {
+            await updateDoc(doc(db, "users", auth.currentUser.uid), u);
+            ['u-fn','u-mn','u-ln','u-ph','u-adr'].forEach(id => document.getElementById(id).readOnly = true);
+            document.getElementById('edit-controls').style.display = 'none';
+            fetchAndPopulate(auth.currentUser);
+            flashAlert("Profile Updated Successfully!");
+        } catch (e) { flashAlert(e.message); }
+        setLoader(false);
+    }
+
+    let pendingVerificationEmail = null;
+    let pendingVerificationPassword = null;
+
+    document.getElementById('btn-do-signup').onclick = async () => {
+        const d = { 
+            fn: document.getElementById('r-fn').value.trim(), 
+            mn: document.getElementById('r-mn').value.trim(), 
+            ln: document.getElementById('r-ln').value.trim(), 
+            ph: document.getElementById('r-ph').value.trim(), 
+            em: document.getElementById('r-em').value.trim(), 
+            ad: document.getElementById('r-adr').value.trim(), 
+            pw: document.getElementById('r-pw').value, 
+            cp: document.getElementById('r-cp').value 
+        };
+        const err = getValidationError({firstName: d.fn, lastName: d.ln, phone: d.ph, address: d.ad});
+        if(err) return flashAlert(err);
+        if(d.pw !== d.cp || d.pw === "") return flashAlert("Passwords must match.");
+
+        setLoader(true);
+        try {
+            const res = await createUserWithEmailAndPassword(auth, d.em, d.pw);
+            await setDoc(doc(db, "users", res.user.uid), { 
+                firstName: d.fn, middleName: d.mn, lastName: d.ln, 
+                phone: d.ph, address: d.ad, email: d.em, 
+                joinedAt: serverTimestamp() 
+            });
+            await sendEmailVerification(res.user);
+            pendingVerificationEmail = d.em;
+            pendingVerificationPassword = d.pw;
+            await signOut(auth); 
+            ['r-fn','r-mn','r-ln','r-ph','r-adr','r-em','r-pw','r-cp'].forEach(id => {
+                const el = document.getElementById(id);
+                el.value = '';
+                el.classList.remove('valid-input', 'invalid-input');
+            });
+            showView('verify');
+        } catch (e) { flashAlert(e.message); }
+        setLoader(false);
+    }
+
+    document.getElementById('btn-login').onclick = async () => {
+        setLoader(true);
+        try { 
+            await signInWithEmailAndPassword(auth, document.getElementById('l-email').value, document.getElementById('l-pass').value);
+            document.getElementById('l-email').value = '';
+            document.getElementById('l-pass').value = '';
+        } 
+        catch (e) { flashAlert("Invalid credentials or verification required."); }
+        setLoader(false);
+    }
+
+    document.getElementById('btn-google').onclick = async () => {
+        setLoader(true);
+        try {
+            const res = await signInWithPopup(auth, provider);
+            const snap = await getDoc(doc(db, "users", res.user.uid));
+            if(!snap.exists()) {
+                const names = (res.user.displayName || "User").split(' ');
+                await setDoc(doc(db, "users", res.user.uid), { 
+                    firstName: names[0], middleName: "", lastName: names[1] || "", 
+                    email: res.user.email, phone: "", address: "", 
+                    joinedAt: serverTimestamp() 
+                });
+            }
+        } catch (e) { flashAlert("Google Auth Failed."); }
+        setLoader(false);
+    }
+
+    document.getElementById('btn-reset-pw').onclick = async () => {
+        setLoader(true);
+        try {
+            await sendPasswordResetEmail(auth, auth.currentUser.email);
+            flashAlert("Reset link sent to " + auth.currentUser.email);
+        } catch (e) { flashAlert(e.message); }
+        setLoader(false);
+    }
+
+    window.resendEmail = async () => {
+        if (pendingVerificationEmail && pendingVerificationPassword) {
+            setLoader(true);
+            try {
+                isResendingVerification = true;
+                const res = await signInWithEmailAndPassword(auth, pendingVerificationEmail, pendingVerificationPassword);
+                await sendEmailVerification(res.user);
+                await signOut(auth);
+                flashAlert("Verification link sent to " + pendingVerificationEmail);
+            } catch (e) {
+                flashAlert("Could not resend. Please try registering again.");
+            } finally {
+                isResendingVerification = false;
+                setLoader(false);
+            }
+        } else if (auth.currentUser) {
+            setLoader(true);
+            await sendEmailVerification(auth.currentUser);
+            setLoader(false);
+            flashAlert("Check your inbox.");
+        } else {
+            flashAlert("Session expired. Please register again.");
+        }
+    }
+
+    // --- UI CONTROLS ---
+    window.togglePass = (id, icon) => { const el = document.getElementById(id); el.type = el.type === 'password' ? 'text' : 'password'; icon.classList.toggle('fa-eye'); icon.classList.toggle('fa-eye-slash'); }
+    window.showView = (v) => { ['login-view', 'signup-view', 'verify-view'].forEach(x => document.getElementById(x).classList.add('hidden')); document.getElementById(v + '-view').classList.remove('hidden'); }
+    window.toggleSec = (id) => { ['welcome-sec', 'profile-sec'].forEach(s => document.getElementById(s).classList.add('hidden')); document.getElementById(id).classList.remove('hidden'); }
+    window.unlock = (id) => {
+        document.getElementById(id).readOnly = false;
+        document.getElementById(id).focus();
+        const ec = document.getElementById('edit-controls');
+        ec.style.display = 'flex';
+    }
+    window.cancelEdit = () => {
+        fetchAndPopulate(auth.currentUser);
+        document.getElementById('edit-controls').style.display = 'none';
+    }
+
+    document.getElementById('btn-logout').onclick = () => signOut(auth);
+
+    // POST PROPERTY BUTTON — navigates to post-property.html (guarded by auth)
+    document.getElementById('btn-post-property').addEventListener('click', () => goToPostProperty());
+</script>
+</body>
+</html>

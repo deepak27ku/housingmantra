@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Post Property | HousingMantra</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root { --gold: #b8860b; --dark: #121212; --glass: rgba(255, 255, 255, 0.98); --border: #e0e0e0; --success: #2ecc71; --error: #ff4d4d; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f4f7f6; margin: 0; padding: 20px; }
+        .container { max-width: 900px; margin: 0 auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 5px 25px rgba(0,0,0,0.1); }
+        h2 { color: var(--gold); border-bottom: 2px solid var(--gold); padding-bottom: 10px; }
+        h3 { font-size: 1.1rem; margin-top: 25px; color: #333; display: flex; align-items: center; gap: 10px; }
+        
+        .section { margin-bottom: 30px; padding: 20px; border: 1px solid #eee; border-radius: 10px; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .full { grid-column: span 2; }
+        
+        label { display: block; font-size: 0.8rem; font-weight: bold; margin-bottom: 5px; color: #666; }
+        input, select, textarea { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; box-sizing: border-box; font-size: 14px; }
+        
+        .dynamic-row { display: flex; gap: 10px; background: #f9f9f9; padding: 15px; border-radius: 8px; margin-bottom: 10px; align-items: flex-end; border-left: 4px solid var(--gold); }
+        .btn-add { background: var(--dark); color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 0.8rem; margin-top: 10px; }
+        .btn-remove { background: #ff4d4d; color: white; border: none; border-radius: 5px; cursor: pointer; padding: 10px; }
+        
+        .type-selector { display: flex; gap: 15px; margin-bottom: 30px; }
+        .type-btn { flex: 1; padding: 15px; border: 2px solid #eee; border-radius: 10px; cursor: pointer; text-align: center; font-weight: bold; transition: 0.3s; }
+        .type-btn.active { border-color: var(--gold); background: #fffdf5; color: var(--gold); }
+        
+        #submit-btn { width: 100%; padding: 18px; background: var(--gold); color: white; border: none; border-radius: 10px; font-size: 1.1rem; font-weight: bold; cursor: pointer; margin-top: 30px; }
+        #submit-btn:disabled { background: #ccc; cursor: not-allowed; }
+        .hidden { display: none; }
+
+        /* SPINNER */
+        #spinner-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.85); z-index: 20000; display: none; align-items: center; justify-content: center; flex-direction: column; }
+        .loader { width: 50px; height: 50px; border: 5px solid #f3f3f3; border-top: 5px solid var(--gold); border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* UPLOAD PROGRESS */
+        .upload-bar-wrap { margin-top: 8px; background: #eee; border-radius: 4px; overflow: hidden; height: 6px; display: none; }
+        .upload-bar { height: 100%; background: var(--gold); width: 0%; transition: width 0.2s; }
+
+        /* ALERT */
+        #central-alert { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 30000; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 0 80px rgba(0,0,0,0.4); border-left: 10px solid var(--gold); min-width: 300px; text-align: center; display: none; }
+        #central-alert button { margin-top: 15px; padding: 10px 25px; background: var(--dark); color: white; border: none; border-radius: 5px; cursor: pointer; }
+
+        /* SUCCESS STATE */
+        #success-banner { display: none; text-align: center; padding: 30px; border-radius: 12px; background: #f0fff4; border: 2px solid var(--success); margin-top: 20px; }
+        #success-banner i { font-size: 3rem; color: var(--success); }
+        #success-banner h3 { color: #1a7a3c; }
+        #success-banner p { color: #555; }
+        #success-banner a { color: var(--gold); font-weight: bold; text-decoration: none; }
+
+        /* FILE LABEL */
+        .file-label { font-size: 0.75rem; color: #888; margin-top: 4px; }
+    </style>
+</head>
+<body>
+
+<div id="spinner-overlay"><div class="loader"></div><p style="margin-top:12px;font-weight:bold;color:#555;">Uploading & Saving...</p></div>
+
+<div id="central-alert">
+    <h4 id="alert-title">Notice</h4>
+    <p id="alert-msg"></p>
+    <button onclick="document.getElementById('central-alert').style.display='none'">OK</button>
+</div>
+
+<div class="container">
+    <button onclick="window.location.href='userlogin.html'" style="border:none; background:none; cursor:pointer; color:var(--gold); font-weight:bold; margin-bottom:20px; font-size:1rem;">
+        <i class="fa-solid fa-arrow-left"></i> Back to Dashboard
+    </button>
+    
+    <h2><i class="fa-solid fa-building" style="margin-right:8px;"></i>Post Your Property</h2>
+    
+    <!-- AUTH GUARD MESSAGE (shown if not logged in) -->
+    <div id="auth-guard" class="hidden" style="text-align:center;padding:40px;color:#888;">
+        <i class="fa-solid fa-lock" style="font-size:2.5rem;color:var(--gold);"></i>
+        <h3>Login Required</h3>
+        <p>You must be logged in to post a property.</p>
+        <a href="userlogin.html" style="background:var(--gold);color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold;">Go to Login</a>
+    </div>
+
+    <!-- FORM (hidden until auth confirmed) -->
+    <div id="form-wrapper" class="hidden">
+
+        <div class="type-selector">
+            <div class="type-btn active" onclick="switchType('project', this)">🏗 Project</div>
+            <div class="type-btn" onclick="switchType('flat', this)">🏠 Flat</div>
+            <div class="type-btn" onclick="switchType('commercial', this)">🏢 Commercial</div>
+        </div>
+
+        <form id="property-form">
+            <!-- BASIC DETAILS -->
+            <div class="section">
+                <h3><i class="fa-solid fa-map-location-dot"></i> Basic Details & Location</h3>
+                <div class="grid">
+                    <div id="owner-dev-field">
+                        <label id="owner-label">Developer Name</label>
+                        <input type="text" id="main_name" placeholder="Enter name" required>
+                    </div>
+                    <div id="rera-box">
+                        <label>RERA ID</label>
+                        <input type="text" id="rera_id" placeholder="Ex: PRM/KA/RERA/...">
+                    </div>
+                    <div>
+                        <label>State</label>
+                        <select id="state_select" onchange="loadDistricts()" required>
+                            <option value="">Select State</option>
+                            <option value="Maharashtra">Maharashtra</option>
+                            <option value="Karnataka">Karnataka</option>
+                            <option value="Gujarat">Gujarat</option>
+                            <option value="Delhi">Delhi</option>
+                            <option value="Tamil Nadu">Tamil Nadu</option>
+                            <option value="Telangana">Telangana</option>
+                            <option value="Rajasthan">Rajasthan</option>
+                            <option value="Uttar Pradesh">Uttar Pradesh</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>District</label>
+                        <select id="district_select" required>
+                            <option value="">Select District</option>
+                        </select>
+                    </div>
+                    <div class="full">
+                        <label>Locality / Area</label>
+                        <input type="text" id="locality" placeholder="Type specific area/neighborhood" required>
+                    </div>
+                    <div class="full hidden" id="full-address-box">
+                        <label>Full Address</label>
+                        <textarea id="full_address" placeholder="Enter complete address details"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CONFIGURATION & PRICING -->
+            <div class="section" id="spec-section">
+                <h3><i class="fa-solid fa-house-chimney"></i> Configuration & Pricing</h3>
+                <div id="bhk-container"></div>
+                <button type="button" class="btn-add" id="add-bhk-btn">+ Add BHK Type</button>
+
+                <div id="comm-fields" class="hidden grid" style="margin-top:20px;">
+                    <div>
+                        <label>Carpet Area (sq ft)</label>
+                        <input type="number" id="comm_carpet" placeholder="Total Area">
+                    </div>
+                    <div>
+                        <label>Price (₹)</label>
+                        <input type="text" id="comm_price" placeholder="Ex: 50 Lac or 2 Cr">
+                    </div>
+                    <div>
+                        <label>Floor No.</label>
+                        <input type="number" id="floor_no">
+                    </div>
+                    <div>
+                        <label>Total Washrooms</label>
+                        <input type="number" id="washrooms">
+                    </div>
+                </div>
+            </div>
+
+            <!-- AMENITIES -->
+            <div class="section" id="amenity-section">
+                <h3><i class="fa-solid fa-sparkles"></i> Amenities</h3>
+                <div id="amenity-container"></div>
+                <button type="button" class="btn-add" onclick="addAmenity()">+ Add Amenity</button>
+            </div>
+
+            <!-- POSSESSION -->
+            <div class="section">
+                <h3><i class="fa-solid fa-clock"></i> Possession Details</h3>
+                <div class="grid">
+                    <div>
+                        <label>Possession Status</label>
+                        <select id="possession_status">
+                            <option value="Ready">Ready to Move</option>
+                            <option value="Under Construction">Under Construction</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>Possession Date</label>
+                        <input type="date" id="possession_date">
+                    </div>
+                    <div class="full">
+                        <label>Property Overview</label>
+                        <textarea id="overview" rows="3" placeholder="Describe the property highlights..."></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- NEARBY LOCATIONS -->
+            <div class="section">
+                <h3><i class="fa-solid fa-route"></i> Nearby Famous Locations</h3>
+                <div id="location-container"></div>
+                <button type="button" class="btn-add" onclick="addNearby()">+ Add Location</button>
+            </div>
+
+            <!-- GALLERY -->
+            <div class="section">
+                <h3><i class="fa-solid fa-images"></i> Gallery</h3>
+                <div class="grid">
+                    <div>
+                        <label>Main Property Card Photo (1 image)</label>
+                        <input type="file" id="main_photo" accept="image/*">
+                        <div class="upload-bar-wrap" id="bar-main"><div class="upload-bar" id="prog-main"></div></div>
+                        <p class="file-label">JPG/PNG/WEBP · Max 5 MB</p>
+                    </div>
+                    <div>
+                        <label>Exterior Photos (Up to 5)</label>
+                        <input type="file" id="exterior_photos" multiple accept="image/*">
+                        <div class="upload-bar-wrap" id="bar-ext"><div class="upload-bar" id="prog-ext"></div></div>
+                        <p class="file-label">JPG/PNG/WEBP · Max 5 MB each</p>
+                    </div>
+                    <div>
+                        <label>Interior Photos (Up to 5)</label>
+                        <input type="file" id="interior_photos" multiple accept="image/*">
+                        <div class="upload-bar-wrap" id="bar-int"><div class="upload-bar" id="prog-int"></div></div>
+                        <p class="file-label">JPG/PNG/WEBP · Max 5 MB each</p>
+                    </div>
+                    <div>
+                        <label>Virtual Tour Link (YouTube / Facebook / Instagram)</label>
+                        <input type="url" id="tour_link" placeholder="https://...">
+                    </div>
+                    <div id="manual-video" class="hidden full">
+                        <label>Upload Virtual Tour Video (Max 50 MB)</label>
+                        <input type="file" id="tour_video" accept="video/*">
+                        <div class="upload-bar-wrap" id="bar-video"><div class="upload-bar" id="prog-video"></div></div>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" id="submit-btn">
+                <i class="fa-solid fa-paper-plane"></i> POST PROPERTY FOR REVIEW
+            </button>
+        </form>
+
+        <!-- SUCCESS BANNER (shown after submit) -->
+        <div id="success-banner">
+            <i class="fa-solid fa-circle-check"></i>
+            <h3>Property Submitted Successfully!</h3>
+            <p>Your listing is under review. You'll be notified once it's live.</p>
+            <p style="margin-top:15px;">
+                <a href="userlogin.html"><i class="fa-solid fa-house"></i> Back to Dashboard</a>
+                &nbsp;&nbsp;|&nbsp;&nbsp;
+                <a href="#" onclick="resetForm()"><i class="fa-solid fa-plus"></i> Post Another</a>
+            </p>
+        </div>
+
+    </div><!-- /form-wrapper -->
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { getStorage, ref as storageRef, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+
+    // ── FIREBASE CONFIG (same project as userlogin.html) ──────────────────────
+    const firebaseConfig = {
+        apiKey: "AIzaSyCCSBAf8hgB7AMbFjnDZMu-79nohueEJF8",
+        authDomain: "housingmantra02.firebaseapp.com",
+        projectId: "housingmantra02",
+        storageBucket: "housingmantra02.firebasestorage.app",
+        messagingSenderId: "638993739848",
+        appId: "1:638993739848:web:2d96ef675c9b1428dee87d"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+    const storage = getStorage(app);
+
+    let currentUser = null;
+    let currentType = 'project';
+
+    // ── AUTH GUARD: redirect to login if not authenticated ────────────────────
+    onAuthStateChanged(auth, user => {
+        if (user) {
+            currentUser = user;
+            document.getElementById('auth-guard').classList.add('hidden');
+            document.getElementById('form-wrapper').classList.remove('hidden');
+        } else {
+            // Not logged in — show guard, hide form
+            document.getElementById('auth-guard').classList.remove('hidden');
+            document.getElementById('form-wrapper').classList.add('hidden');
+        }
+    });
+
+    // ── DISTRICTS DATA ─────────────────────────────────────────────────────────
+    const districts = {
+        "Maharashtra": ["Mumbai", "Pune", "Nagpur", "Thane", "Nashik", "Aurangabad"],
+        "Karnataka":   ["Bengaluru", "Mysuru", "Hubli", "Mangaluru", "Belagavi"],
+        "Gujarat":     ["Ahmedabad", "Surat", "Vadodara", "Rajkot", "Gandhinagar"],
+        "Delhi":       ["New Delhi", "North Delhi", "South Delhi", "East Delhi", "West Delhi"],
+        "Tamil Nadu":  ["Chennai", "Coimbatore", "Madurai", "Salem", "Tiruchirappalli"],
+        "Telangana":   ["Hyderabad", "Warangal", "Nizamabad", "Karimnagar"],
+        "Rajasthan":   ["Jaipur", "Jodhpur", "Udaipur", "Kota", "Ajmer"],
+        "Uttar Pradesh":["Lucknow", "Agra", "Kanpur", "Varanasi", "Noida", "Ghaziabad"]
+    };
+
+    window.loadDistricts = () => {
+        const state = document.getElementById('state_select').value;
+        const distDropdown = document.getElementById('district_select');
+        distDropdown.innerHTML = '<option value="">Select District</option>';
+        if (districts[state]) {
+            districts[state].forEach(d => distDropdown.innerHTML += `<option value="${d}">${d}</option>`);
+        }
+    };
+
+    // ── TYPE SWITCHER ──────────────────────────────────────────────────────────
+    window.switchType = (type, btn) => {
+        currentType = type;
+        document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        document.getElementById('owner-label').innerText = type === 'project' ? 'Developer Name' : 'Owner Name';
+        document.getElementById('rera-box').classList.toggle('hidden', type !== 'project');
+        document.getElementById('full-address-box').classList.toggle('hidden', type !== 'commercial');
+        document.getElementById('comm-fields').classList.toggle('hidden', type !== 'commercial');
+        document.getElementById('bhk-container').classList.toggle('hidden', type === 'commercial');
+        document.getElementById('add-bhk-btn').classList.toggle('hidden', type === 'commercial');
+        document.getElementById('manual-video').classList.toggle('hidden', type !== 'flat');
+    };
+
+    // ── DYNAMIC ROWS ───────────────────────────────────────────────────────────
+    window.addBhk = () => {
+        const div = document.createElement('div');
+        div.className = 'dynamic-row';
+        div.innerHTML = `
+            <div style="flex:1"><label>BHK Type</label><input type="text" placeholder="e.g. 2BHK"></div>
+            <div style="flex:1"><label>Carpet (sqft)</label><input type="number" min="0"></div>
+            <div style="flex:1"><label>Price</label><input type="text" placeholder="₹ Lac/Cr"></div>
+            <div style="flex:1">
+                <label>Floor Plan (2D/3D)</label>
+                <input type="file" multiple accept="image/*,application/pdf">
+            </div>
+            <button type="button" class="btn-remove" onclick="this.parentElement.remove()"><i class="fa-solid fa-trash"></i></button>
+        `;
+        document.getElementById('bhk-container').appendChild(div);
+    };
+
+    window.addAmenity = () => {
+        const div = document.createElement('div');
+        div.className = 'dynamic-row';
+        div.innerHTML = `
+            <input type="text" placeholder="e.g. Swimming Pool, Gym" style="flex:1">
+            <button type="button" class="btn-remove" onclick="this.parentElement.remove()"><i class="fa-solid fa-trash"></i></button>
+        `;
+        document.getElementById('amenity-container').appendChild(div);
+    };
+
+    window.addNearby = () => {
+        const div = document.createElement('div');
+        div.className = 'dynamic-row';
+        div.innerHTML = `
+            <input type="text" placeholder="Location Name" style="flex:2">
+            <input type="text" placeholder="Distance (km)" style="flex:1">
+            <button type="button" class="btn-remove" onclick="this.parentElement.remove()"><i class="fa-solid fa-trash"></i></button>
+        `;
+        document.getElementById('location-container').appendChild(div);
+    };
+
+    document.getElementById('add-bhk-btn').onclick = addBhk;
+    addBhk();
+    addAmenity();
+    addNearby();
+
+    // ── HELPERS ────────────────────────────────────────────────────────────────
+    const showAlert = (msg) => {
+        document.getElementById('alert-msg').innerText = msg;
+        document.getElementById('central-alert').style.display = 'block';
+    };
+
+    const setLoader = (show) => {
+        document.getElementById('spinner-overlay').style.display = show ? 'flex' : 'none';
+    };
+
+    /**
+     * Upload a single file to Firebase Storage.
+     * @param {File} file
+     * @param {string} path  - Storage path e.g. "properties/{uid}/main/filename"
+     * @param {string} barId - progress bar element id
+     * @param {string} progId - inner fill element id
+     * @returns {Promise<string>} download URL
+     */
+    const uploadFile = (file, path, barId, progId) => new Promise((resolve, reject) => {
+        const barWrap = document.getElementById(barId);
+        const bar = document.getElementById(progId);
+        barWrap.style.display = 'block';
+        bar.style.width = '0%';
+
+        const ref = storageRef(storage, path);
+        const task = uploadBytesResumable(ref, file);
+
+        task.on('state_changed',
+            snap => {
+                const pct = Math.round((snap.bytesTransferred / snap.totalBytes) * 100);
+                bar.style.width = pct + '%';
+            },
+            err => reject(err),
+            async () => {
+                const url = await getDownloadURL(task.snapshot.ref);
+                barWrap.style.display = 'none';
+                resolve(url);
+            }
+        );
+    });
+
+    /**
+     * Upload multiple files and return array of URLs.
+     */
+    const uploadMultiple = async (files, basePath, barId, progId) => {
+        const urls = [];
+        for (let i = 0; i < files.length; i++) {
+            const url = await uploadFile(
+                files[i],
+                `${basePath}/${Date.now()}_${files[i].name}`,
+                barId,
+                progId
+            );
+            urls.push(url);
+        }
+        return urls;
+    };
+
+    // ── FORM SUBMIT ────────────────────────────────────────────────────────────
+    document.getElementById('property-form').onsubmit = async (e) => {
+        e.preventDefault();
+
+        if (!currentUser) {
+            showAlert("You must be logged in to post a property.");
+            return;
+        }
+
+        // --- Collect basic fields ---
+        const mainName   = document.getElementById('main_name').value.trim();
+        const reraId     = document.getElementById('rera_id').value.trim();
+        const state      = document.getElementById('state_select').value;
+        const district   = document.getElementById('district_select').value;
+        const locality   = document.getElementById('locality').value.trim();
+        const fullAddr   = document.getElementById('full_address').value.trim();
+        const posStatus  = document.getElementById('possession_status').value;
+        const posDate    = document.getElementById('possession_date').value;
+        const overview   = document.getElementById('overview').value.trim();
+        const tourLink   = document.getElementById('tour_link').value.trim();
+
+        // Basic validation
+        if (!mainName) return showAlert("Please enter the developer / owner name.");
+        if (!state)    return showAlert("Please select a state.");
+        if (!district) return showAlert("Please select a district.");
+        if (!locality) return showAlert("Please enter the locality.");
+
+        // --- Collect BHK rows (for project/flat) ---
+        const bhkData = [];
+        if (currentType !== 'commercial') {
+            document.querySelectorAll('#bhk-container .dynamic-row').forEach(row => {
+                const inputs = row.querySelectorAll('input[type=text], input[type=number]');
+                bhkData.push({
+                    type:   inputs[0]?.value.trim() || '',
+                    carpet: inputs[1]?.value.trim() || '',
+                    price:  inputs[2]?.value.trim() || ''
+                    // floor plan files handled below
+                });
+            });
+        }
+
+        // --- Collect commercial fields ---
+        const commData = currentType === 'commercial' ? {
+            carpetArea: document.getElementById('comm_carpet').value,
+            price:      document.getElementById('comm_price').value.trim(),
+            floorNo:    document.getElementById('floor_no').value,
+            washrooms:  document.getElementById('washrooms').value
+        } : null;
+
+        // --- Collect amenities ---
+        const amenities = [];
+        document.querySelectorAll('#amenity-container .dynamic-row input').forEach(inp => {
+            if (inp.value.trim()) amenities.push(inp.value.trim());
+        });
+
+        // --- Collect nearby locations ---
+        const nearbyLocations = [];
+        document.querySelectorAll('#location-container .dynamic-row').forEach(row => {
+            const inputs = row.querySelectorAll('input');
+            if (inputs[0]?.value.trim()) {
+                nearbyLocations.push({ name: inputs[0].value.trim(), distance: inputs[1]?.value.trim() || '' });
+            }
+        });
+
+        setLoader(true);
+        document.getElementById('submit-btn').disabled = true;
+
+        try {
+            const uid = currentUser.uid;
+            const storagePath = `properties/${uid}/${Date.now()}`;
+
+            // --- Upload images ---
+            let mainPhotoURL   = '';
+            let exteriorURLs   = [];
+            let interiorURLs   = [];
+            let tourVideoURL   = '';
+
+            const mainPhotoFile = document.getElementById('main_photo').files[0];
+            if (mainPhotoFile) {
+                mainPhotoURL = await uploadFile(
+                    mainPhotoFile,
+                    `${storagePath}/main/${mainPhotoFile.name}`,
+                    'bar-main', 'prog-main'
+                );
+            }
+
+            const extFiles = document.getElementById('exterior_photos').files;
+            if (extFiles.length > 0) {
+                if (extFiles.length > 5) { showAlert("Max 5 exterior photos allowed."); setLoader(false); document.getElementById('submit-btn').disabled = false; return; }
+                exteriorURLs = await uploadMultiple([...extFiles], `${storagePath}/exterior`, 'bar-ext', 'prog-ext');
+            }
+
+            const intFiles = document.getElementById('interior_photos').files;
+            if (intFiles.length > 0) {
+                if (intFiles.length > 5) { showAlert("Max 5 interior photos allowed."); setLoader(false); document.getElementById('submit-btn').disabled = false; return; }
+                interiorURLs = await uploadMultiple([...intFiles], `${storagePath}/interior`, 'bar-int', 'prog-int');
+            }
+
+            const tourVideoFile = document.getElementById('tour_video')?.files[0];
+            if (tourVideoFile) {
+                if (tourVideoFile.size > 50 * 1024 * 1024) { showAlert("Video must be under 50 MB."); setLoader(false); document.getElementById('submit-btn').disabled = false; return; }
+                tourVideoURL = await uploadFile(
+                    tourVideoFile,
+                    `${storagePath}/video/${tourVideoFile.name}`,
+                    'bar-video', 'prog-video'
+                );
+            }
+
+            // --- Upload BHK floor plans ---
+            const bhkFloorPlans = [];
+            if (currentType !== 'commercial') {
+                const bhkRows = document.querySelectorAll('#bhk-container .dynamic-row');
+                for (let i = 0; i < bhkRows.length; i++) {
+                    const planFiles = bhkRows[i].querySelector('input[type=file]')?.files || [];
+                    const planURLs = [];
+                    for (const pf of planFiles) {
+                        const url = await uploadFile(pf, `${storagePath}/bhk_${i}/${pf.name}`, 'bar-main', 'prog-main');
+                        planURLs.push(url);
+                    }
+                    bhkFloorPlans.push(planURLs);
+                }
+                bhkData.forEach((b, i) => { b.floorPlans = bhkFloorPlans[i] || []; });
+            }
+
+            // --- Build Firestore document ---
+            const propertyDoc = {
+                // Meta
+                postedBy:      uid,
+                userEmail:     currentUser.email,
+                propertyType:  currentType,
+                status:        'pending_review',   // admin reviews before going live
+                createdAt:     serverTimestamp(),
+
+                // Location
+                mainName,
+                reraId,
+                state,
+                district,
+                locality,
+                fullAddress:   fullAddr,
+
+                // Specs
+                bhkConfigs:    currentType !== 'commercial' ? bhkData : [],
+                commercial:    commData,
+                amenities,
+
+                // Possession
+                possessionStatus: posStatus,
+                possessionDate:   posDate,
+                overview,
+
+                // Nearby
+                nearbyLocations,
+
+                // Media
+                mainPhotoURL,
+                exteriorPhotos: exteriorURLs,
+                interiorPhotos: interiorURLs,
+                tourLink,
+                tourVideoURL
+            };
+
+            // --- Save to Firestore collection "properties" ---
+            const docRef = await addDoc(collection(db, "properties"), propertyDoc);
+            console.log("Property saved with ID:", docRef.id);
+
+            setLoader(false);
+
+            // Show success state
+            document.getElementById('property-form').classList.add('hidden');
+            document.getElementById('success-banner').style.display = 'block';
+
+        } catch (err) {
+            console.error("Submit error:", err);
+            showAlert("Error submitting property: " + err.message);
+            setLoader(false);
+            document.getElementById('submit-btn').disabled = false;
+        }
+    };
+
+    // ── RESET FORM ─────────────────────────────────────────────────────────────
+    window.resetForm = () => {
+        document.getElementById('property-form').reset();
+        document.getElementById('bhk-container').innerHTML = '';
+        document.getElementById('amenity-container').innerHTML = '';
+        document.getElementById('location-container').innerHTML = '';
+        addBhk(); addAmenity(); addNearby();
+        document.getElementById('property-form').classList.remove('hidden');
+        document.getElementById('success-banner').style.display = 'none';
+        document.getElementById('submit-btn').disabled = false;
+        // Reset type to project
+        switchType('project', document.querySelectorAll('.type-btn')[0]);
+    };
+
+</script>
+</body>
+</html>
